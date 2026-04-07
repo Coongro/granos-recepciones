@@ -1,0 +1,364 @@
+{
+  "id": "ea8985b7-a10a-4a12-b873-2bd07074fe04",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.module_granos_recepciones_receipts": {
+      "name": "module_granos_recepciones_receipts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "receipt_number": {
+          "name": "receipt_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ctg_number": {
+          "name": "ctg_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "producer_id": {
+          "name": "producer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "driver_id": {
+          "name": "driver_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reception_date": {
+          "name": "reception_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "grain_type": {
+          "name": "grain_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "harvest": {
+          "name": "harvest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_per_ton": {
+          "name": "price_per_ton",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gross_kg": {
+          "name": "gross_kg",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tara_kg": {
+          "name": "tara_kg",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "net_without_cleaning_kg": {
+          "name": "net_without_cleaning_kg",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "precleaning_kg": {
+          "name": "precleaning_kg",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "net_kg": {
+          "name": "net_kg",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "shrinkage_kg": {
+          "name": "shrinkage_kg",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "final_net_kg": {
+          "name": "final_net_kg",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dirt_percent": {
+          "name": "dirt_percent",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stick_percent": {
+          "name": "stick_percent",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "box_percent": {
+          "name": "box_percent",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "apt_percent": {
+          "name": "apt_percent",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "loose_percent": {
+          "name": "loose_percent",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "humidity_percent": {
+          "name": "humidity_percent",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "box_grain_percent": {
+          "name": "box_grain_percent",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zaranda_size": {
+          "name": "zaranda_size",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.module_granos_recepciones_drivers": {
+      "name": "module_granos_recepciones_drivers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "document_number": {
+          "name": "document_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "company_name": {
+          "name": "company_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "truck_plate": {
+          "name": "truck_plate",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trailer_plate": {
+          "name": "trailer_plate",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.module_granos_recepciones_deliveries": {
+      "name": "module_granos_recepciones_deliveries",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "scheduled_date": {
+          "name": "scheduled_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "producer_id": {
+          "name": "producer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "driver_id": {
+          "name": "driver_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estimated_kg": {
+          "name": "estimated_kg",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

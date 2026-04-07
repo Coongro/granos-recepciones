@@ -1,0 +1,86 @@
+{
+  "id": "granos-recepciones",
+  "version": "1.0.0",
+  "apiVersion": "2.0",
+  "assets": {
+    "styles": [
+      "./dist/assets/tailwind.css",
+      "./dist/assets/fontawesome/css/all.min.css"
+    ]
+  },
+  "contributes": {
+    "menus": [
+      {
+        "path": "Recepciones",
+        "order": 20,
+        "viewId": "granos-recepciones.recepciones.open",
+        "icon": "assets/icons/camion.svg",
+        "color": "#2E7D32"
+      },
+      {
+        "path": "Conductores",
+        "order": 30,
+        "viewId": "granos-recepciones.conductores.open",
+        "icon": "assets/icons/usuario.svg",
+        "color": "#1565C0"
+      },
+      {
+        "path": "Productores",
+        "order": 40,
+        "viewId": "granos-recepciones.productores.open",
+        "icon": "assets/icons/persona.svg",
+        "color": "#6A1B9A"
+      },
+      {
+        "path": "Calendario",
+        "order": 50,
+        "viewId": "granos-recepciones.calendario.open",
+        "icon": "assets/icons/calendario.svg",
+        "color": "#E65100"
+      }
+    ],
+    "views": [
+      {
+        "id": "granos-recepciones.recepciones.open",
+        "title": "Recepciones",
+        "component": "./dist/views/list/index.js",
+        "export": "ListView"
+      },
+      {
+        "id": "granos-recepciones.conductores.open",
+        "title": "Conductores",
+        "component": "./dist/views/drivers/index.js",
+        "export": "DriversView"
+      },
+      {
+        "id": "granos-recepciones.productores.open",
+        "title": "Productores",
+        "component": "./dist/views/producers/index.js",
+        "export": "ProducersView"
+      },
+      {
+        "id": "granos-recepciones.calendario.open",
+        "title": "Calendario",
+        "component": "./dist/views/calendar/index.js",
+        "export": "CalendarView"
+      }
+    ],
+    "repositories": [
+      {
+        "module": "./dist/repositories/receipt.repository.js",
+        "export": "ReceiptRepository",
+        "prefix": "granos-recepciones.receipts"
+      },
+      {
+        "module": "./dist/repositories/driver.repository.js",
+        "export": "DriverRepository",
+        "prefix": "granos-recepciones.drivers"
+      },
+      {
+        "module": "./dist/repositories/delivery.repository.js",
+        "export": "DeliveryRepository",
+        "prefix": "granos-recepciones.deliveries"
+      }
+    ]
+  }
+}
