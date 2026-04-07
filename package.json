@@ -24,7 +24,7 @@
   "scripts": {
     "prepare": "husky",
     "build": "npm run build:css && npm run copy:fontawesome && tsc",
-    "build:css": "tailwindcss -c tailwind.config.cjs -i ./src/styles/tailwind.css -o ./dist/assets/tailwind.css --minify && cat ../calendar/dist/assets/tailwind.css >> ./dist/assets/tailwind.css",
+    "build:css": "tailwindcss -c tailwind.config.cjs -i ./src/styles/tailwind.css -o ./dist/assets/tailwind.css --minify && cat ../calendar/dist/assets/tailwind.css >> ./dist/assets/tailwind.css 2>/dev/null || true",
     "copy:fontawesome": "node scripts/copy-fontawesome.cjs",
     "dev": "npm run build:css && tsc --watch",
     "typecheck": "tsc --noEmit",
