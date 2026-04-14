@@ -17,19 +17,29 @@ interface Receipt {
   status: string;
   ctgNumber: string;
   driverId: string;
+  transportCompany: string;
   harvest: string;
   pricePerTon: number;
   netWithoutCleaningKg: number;
   precleaningKg: number;
   netKg: number;
   shrinkageKg: number;
+  humidityPercent: number;
+  foreignMatterGr: number;
+  dirtGr: number;
+  shellGr: number;
+  damagedGrainGr: number;
+  looseGrainGr: number;
+  aptGrainGr: number;
+  sampleTotalGr: number;
   dirtPercent: number;
   stickPercent: number;
   boxPercent: number;
   aptPercent: number;
   loosePercent: number;
-  humidityPercent: number;
   boxGrainPercent: number;
+  industryKg: number;
+  confectioneryKg: number;
   zarandaSize: number;
   notes: string;
   createdAt: string;
@@ -42,6 +52,7 @@ interface FormData {
   ctgNumber: string;
   producerId: string;
   driverId: string;
+  transportCompany: string;
   receptionDate: string;
   grainType: string;
   harvest: string;
@@ -52,24 +63,96 @@ interface FormData {
   netWithoutCleaningKg: number;
   precleaningKg: number;
   netKg: number;
+  humidityPercent: number;
   shrinkageKg: number;
   finalNetKg: number;
+  foreignMatterGr: number;
+  dirtGr: number;
+  shellGr: number;
+  damagedGrainGr: number;
+  looseGrainGr: number;
+  aptGrainGr: number;
+  sampleTotalGr: number;
   dirtPercent: number;
   stickPercent: number;
   boxPercent: number;
   aptPercent: number;
   loosePercent: number;
-  humidityPercent: number;
   boxGrainPercent: number;
+  industryKg: number;
+  confectioneryKg: number;
   zarandaSize: number;
   notes: string;
 }
 
-const EMPTY_FORM: FormData = {
+// ── Funciones de calculo ──
+
+function calcSamplePercentages(form: FormData): Partial<FormData> {
+  const sampleTotalGr =
+    form.foreignMatterGr + form.dirtGr + form.shellGr + form.looseGrainGr + form.aptGrainGr;
+  if (sampleTotalGr <= 0) {
+    return {
+      sampleTotalGr: 0,
+      stickPercent: 0,
+      dirtPercent: 0,
+      boxPercent: 0,
+      boxGrainPercent: 0,
+      loosePercent: 0,
+      aptPercent: 0,
+    };
+  }
+  return {
+    sampleTotalGr,
+    stickPercent: Math.round(((form.foreignMatterGr * 100) / sampleTotalGr) * 100) / 100,
+    dirtPercent: Math.round(((form.dirtGr * 100) / sampleTotalGr) * 100) / 100,
+    boxPercent: Math.round(((form.shellGr * 100) / sampleTotalGr) * 100) / 100,
+    boxGrainPercent: Math.round(((form.damagedGrainGr * 100) / sampleTotalGr) * 100) / 100,
+    loosePercent: Math.round(((form.looseGrainGr * 100) / sampleTotalGr) * 100) / 100,
+    aptPercent: Math.round(((form.aptGrainGr * 100) / sampleTotalGr) * 100) / 100,
+  };
+}
+
+function calcShrinkage(netKg: number, humidityPercent: number): number {
+  if (humidityPercent > 9) {
+    return Math.round(netKg * ((humidityPercent - 9) / 100) * 1.3 * 100) / 100;
+  }
+  return 0;
+}
+
+function calcWeights(form: FormData): Partial<FormData> {
+  const netWithoutCleaningKg = form.grossKg - form.taraKg;
+  const netKg = netWithoutCleaningKg - form.precleaningKg;
+  const shrinkageKg = calcShrinkage(netKg, form.humidityPercent);
+  const finalNetKg = netKg - shrinkageKg;
+  return { netWithoutCleaningKg, netKg, shrinkageKg, finalNetKg };
+}
+
+function calcIndustryConfectionery(form: FormData): Partial<FormData> {
+  const finalNetKg = form.finalNetKg ?? 0;
+  const loosePercent = form.loosePercent ?? 0;
+  const damagedPercent = form.boxGrainPercent ?? 0;
+  const aptPercent = form.aptPercent ?? 0;
+  return {
+    industryKg: Math.round(finalNetKg * ((loosePercent + damagedPercent) / 100) * 100) / 100,
+    confectioneryKg: Math.round(finalNetKg * (aptPercent / 100) * 100) / 100,
+  };
+}
+
+function recalcAll(base: FormData): FormData {
+  const weights = calcWeights(base);
+  const withWeights = { ...base, ...weights };
+  const sample = calcSamplePercentages(withWeights);
+  const withSample = { ...withWeights, ...sample };
+  const industry = calcIndustryConfectionery(withSample);
+  return { ...withSample, ...industry };
+}
+
+const EMPTY_FORM: FormData = recalcAll({
   receiptNumber: '',
   ctgNumber: '',
   producerId: '',
   driverId: '',
+  transportCompany: '',
   receptionDate: '',
   grainType: 'mani_caja_runner',
   harvest: '',
@@ -80,18 +163,27 @@ const EMPTY_FORM: FormData = {
   netWithoutCleaningKg: 0,
   precleaningKg: 0,
   netKg: 0,
+  humidityPercent: 0,
   shrinkageKg: 0,
   finalNetKg: 0,
+  foreignMatterGr: 0,
+  dirtGr: 0,
+  shellGr: 0,
+  damagedGrainGr: 0,
+  looseGrainGr: 0,
+  aptGrainGr: 0,
+  sampleTotalGr: 0,
   dirtPercent: 0,
   stickPercent: 0,
   boxPercent: 0,
   aptPercent: 0,
   loosePercent: 0,
-  humidityPercent: 0,
   boxGrainPercent: 0,
+  industryKg: 0,
+  confectioneryKg: 0,
   zarandaSize: 0,
   notes: '',
-};
+});
 
 const formatDate = (dateStr: string): string => {
   if (!dateStr) return '—';
@@ -100,6 +192,11 @@ const formatDate = (dateStr: string): string => {
   } catch {
     return dateStr;
   }
+};
+
+// Selecciona todo el texto al hacer foco en un input numerico
+const numericFocusProps = {
+  onFocus: (e: { target: { select: () => void } }) => e.target.select(),
 };
 
 export function ListView() {
@@ -202,7 +299,10 @@ export function ListView() {
         const bRaw = (b as Record<string, unknown>)[sortKey];
         const aNum = Number(aRaw);
         const bNum = Number(bRaw);
-        const cmp = !isNaN(aNum) && !isNaN(bNum) ? aNum - bNum : String(aRaw ?? '').localeCompare(String(bRaw ?? ''));
+        const cmp =
+          !isNaN(aNum) && !isNaN(bNum)
+            ? aNum - bNum
+            : String(aRaw ?? '').localeCompare(String(bRaw ?? ''));
         return sortDir === 'asc' ? cmp : -cmp;
       });
     }
@@ -231,11 +331,12 @@ export function ListView() {
 
   const openEdit = useCallback((item: Receipt) => {
     setEditing(item);
-    setForm({
+    const base: FormData = {
       receiptNumber: item.receiptNumber ?? '',
       ctgNumber: item.ctgNumber ?? '',
       producerId: item.producerId ?? '',
       driverId: item.driverId ?? '',
+      transportCompany: item.transportCompany ?? '',
       receptionDate: item.receptionDate ?? '',
       grainType: item.grainType ?? '',
       harvest: item.harvest ?? '',
@@ -246,52 +347,75 @@ export function ListView() {
       netWithoutCleaningKg: item.netWithoutCleaningKg ?? 0,
       precleaningKg: item.precleaningKg ?? 0,
       netKg: item.netKg ?? 0,
+      humidityPercent: item.humidityPercent ?? 0,
       shrinkageKg: item.shrinkageKg ?? 0,
       finalNetKg: item.finalNetKg ?? 0,
+      foreignMatterGr: item.foreignMatterGr ?? 0,
+      dirtGr: item.dirtGr ?? 0,
+      shellGr: item.shellGr ?? 0,
+      damagedGrainGr: item.damagedGrainGr ?? 0,
+      looseGrainGr: item.looseGrainGr ?? 0,
+      aptGrainGr: item.aptGrainGr ?? 0,
+      sampleTotalGr: item.sampleTotalGr ?? 0,
       dirtPercent: item.dirtPercent ?? 0,
       stickPercent: item.stickPercent ?? 0,
       boxPercent: item.boxPercent ?? 0,
       aptPercent: item.aptPercent ?? 0,
       loosePercent: item.loosePercent ?? 0,
-      humidityPercent: item.humidityPercent ?? 0,
       boxGrainPercent: item.boxGrainPercent ?? 0,
+      industryKg: item.industryKg ?? 0,
+      confectioneryKg: item.confectioneryKg ?? 0,
       zarandaSize: item.zarandaSize ?? 0,
       notes: item.notes ?? '',
-    });
+    };
+    setForm(recalcAll(base));
     setDialogOpen(true);
+  }, []);
+
+  // Helper para actualizar un campo y recalcular todo
+  const updateField = useCallback((field: keyof FormData, value: string | number) => {
+    setForm((prev: FormData) => recalcAll({ ...prev, [field]: value }));
   }, []);
 
   const handleSave = useCallback(async () => {
     if (saving) return;
-    const netWithoutCleaningKg = form.grossKg - form.taraKg;
-    const netKg = netWithoutCleaningKg - form.precleaningKg;
-    const finalNetKg = netKg - form.shrinkageKg;
+    const calculated = recalcAll(form);
     const payload = {
-      receiptNumber: form.receiptNumber,
-      ctgNumber: form.ctgNumber,
-      producerId: form.producerId,
-      driverId: form.driverId,
-      receptionDate: form.receptionDate,
-      grainType: form.grainType,
-      harvest: form.harvest,
-      pricePerTon: form.pricePerTon,
-      status: form.status,
-      grossKg: form.grossKg,
-      taraKg: form.taraKg,
-      netWithoutCleaningKg,
-      precleaningKg: form.precleaningKg,
-      netKg,
-      shrinkageKg: form.shrinkageKg,
-      finalNetKg,
-      dirtPercent: form.dirtPercent,
-      stickPercent: form.stickPercent,
-      boxPercent: form.boxPercent,
-      aptPercent: form.aptPercent,
-      loosePercent: form.loosePercent,
-      humidityPercent: form.humidityPercent,
-      boxGrainPercent: form.boxGrainPercent,
-      zarandaSize: form.zarandaSize,
-      notes: form.notes,
+      receiptNumber: calculated.receiptNumber,
+      ctgNumber: calculated.ctgNumber,
+      producerId: calculated.producerId,
+      driverId: calculated.driverId,
+      transportCompany: calculated.transportCompany,
+      receptionDate: calculated.receptionDate,
+      grainType: calculated.grainType,
+      harvest: calculated.harvest,
+      pricePerTon: calculated.pricePerTon,
+      status: calculated.status,
+      grossKg: calculated.grossKg,
+      taraKg: calculated.taraKg,
+      netWithoutCleaningKg: calculated.netWithoutCleaningKg,
+      precleaningKg: calculated.precleaningKg,
+      netKg: calculated.netKg,
+      humidityPercent: calculated.humidityPercent,
+      shrinkageKg: calculated.shrinkageKg,
+      finalNetKg: calculated.finalNetKg,
+      foreignMatterGr: calculated.foreignMatterGr,
+      dirtGr: calculated.dirtGr,
+      shellGr: calculated.shellGr,
+      damagedGrainGr: calculated.damagedGrainGr,
+      looseGrainGr: calculated.looseGrainGr,
+      aptGrainGr: calculated.aptGrainGr,
+      sampleTotalGr: calculated.sampleTotalGr,
+      dirtPercent: calculated.dirtPercent,
+      stickPercent: calculated.stickPercent,
+      boxPercent: calculated.boxPercent,
+      aptPercent: calculated.aptPercent,
+      loosePercent: calculated.loosePercent,
+      boxGrainPercent: calculated.boxGrainPercent,
+      industryKg: calculated.industryKg,
+      confectioneryKg: calculated.confectioneryKg,
+      zarandaSize: calculated.zarandaSize,
+      notes: calculated.notes,
     };
     setSaving(true);
     try {
@@ -422,16 +546,22 @@ export function ListView() {
             render: (item: Receipt) => Number(item.grossKg ?? 0).toLocaleString('es-AR'),
           },
           {
-            key: 'taraKg',
-            header: 'Tara Kg',
-            sortable: true,
-            render: (item: Receipt) => Number(item.taraKg ?? 0).toLocaleString('es-AR'),
-          },
-          {
             key: 'finalNetKg',
             header: 'Kg Neto Final',
             sortable: true,
             render: (item: Receipt) => Number(item.finalNetKg ?? 0).toLocaleString('es-AR'),
+          },
+          {
+            key: 'industryKg',
+            header: 'Kg Industria',
+            sortable: true,
+            render: (item: Receipt) => Number(item.industryKg ?? 0).toLocaleString('es-AR'),
+          },
+          {
+            key: 'confectioneryKg',
+            header: 'Kg Confiteria',
+            sortable: true,
+            render: (item: Receipt) => Number(item.confectioneryKg ?? 0).toLocaleString('es-AR'),
           },
           {
             key: 'status',
@@ -460,8 +590,8 @@ export function ListView() {
               setPage(1);
             },
             options: [
-              { value: 'mani_caja_runner', label: 'Maní Caja Runner' },
-              { value: 'mani_blancheado', label: 'Maní Blancheado' },
+              { value: 'mani_caja_runner', label: 'Mani Caja Runner' },
+              { value: 'mani_blancheado', label: 'Mani Blancheado' },
             ],
           },
           {
@@ -494,7 +624,7 @@ export function ListView() {
           {
             label: 'Copiar',
             onClick: (item: Receipt) => {
-              const text = `Carta de Porte Nº ${item.receiptNumber ?? ''} | Fecha: ${formatDate(item.receptionDate)} | Productor: ${getContactsName(item.producerId)} | Tipo: ${item.grainType ?? ''} | Bruto: ${Number(item.grossKg ?? 0).toLocaleString('es-AR')} kg | Neto Final: ${Number(item.finalNetKg ?? 0).toLocaleString('es-AR')} kg | Estado: ${item.status ?? ''}`;
+              const text = `Carta de Porte N.o ${item.receiptNumber ?? ''} | Fecha: ${formatDate(item.receptionDate)} | Productor: ${getContactsName(item.producerId)} | Tipo: ${item.grainType ?? ''} | Bruto: ${Number(item.grossKg ?? 0).toLocaleString('es-AR')} kg | Neto Final: ${Number(item.finalNetKg ?? 0).toLocaleString('es-AR')} kg | Estado: ${item.status ?? ''}`;
               void navigator.clipboard.writeText(text);
               toast.success('Copiado', 'Datos copiados al portapapeles');
             },
@@ -529,9 +659,13 @@ export function ListView() {
 
         // Empty state
         emptyState: {
-          title: 'Aún no hay cartas de porte',
-          description: 'Registrá la primera recepción con el botón de arriba.',
-          icon: React.createElement(UI.DynamicIcon, { icon: 'FileText', size: 40, className: 'text-cg-text-muted' }),
+          title: 'Aun no hay cartas de porte',
+          description: 'Registra la primera recepcion con el boton de arriba.',
+          icon: React.createElement(UI.DynamicIcon, {
+            icon: 'FileText',
+            size: 40,
+            className: 'text-cg-text-muted',
+          }),
           filteredTitle: 'No se encontraron resultados con esos filtros',
         },
       }),
@@ -568,8 +702,15 @@ export function ListView() {
             'div',
             { className: 'flex flex-col gap-6' },
 
-            // ── Sección 1: Datos generales ──
-            React.createElement('h3', { className: 'text-sm font-semibold text-cg-text-muted uppercase tracking-wide border-b border-cg-border pb-2' }, 'Datos generales'),
+            // ── Seccion 1: Datos generales ──
+            React.createElement(
+              'h3',
+              {
+                className:
+                  'text-sm font-semibold text-cg-text-muted uppercase tracking-wide border-b border-cg-border pb-2',
+              },
+              'Datos generales'
+            ),
             React.createElement(
               'div',
               { className: 'grid grid-cols-2 gap-4' },
@@ -581,7 +722,7 @@ export function ListView() {
                   value: form.receiptNumber,
                   placeholder: 'Nro. Carta de Porte...',
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => ({ ...prev, receiptNumber: e.target.value })),
+                    updateField('receiptNumber', e.target.value),
                 })
               ),
               React.createElement(
@@ -592,7 +733,7 @@ export function ListView() {
                   value: form.ctgNumber,
                   placeholder: 'Nro. CTG...',
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => ({ ...prev, ctgNumber: e.target.value })),
+                    updateField('ctgNumber', e.target.value),
                 })
               ),
               React.createElement(
@@ -603,23 +744,24 @@ export function ListView() {
                   UI.Combobox,
                   {
                     value: form.producerId,
-                    onValueChange: (v: string) =>
-                      setForm((prev: FormData) => ({ ...prev, producerId: v })),
+                    onValueChange: (v: string) => updateField('producerId', v),
                   },
                   React.createElement(UI.ComboboxChipTrigger, {
                     placeholder: 'Buscar productor...',
                     renderChip: (val: string, onRemove: () => void) => {
                       const c = contacts.find((x: Record<string, unknown>) => String(x.id) === val);
-                      return React.createElement(UI.Chip, { size: 'sm', onRemove }, String(c?.name ?? val));
+                      return React.createElement(
+                        UI.Chip,
+                        { size: 'sm', onRemove },
+                        String(c?.name ?? val)
+                      );
                     },
                   }),
                   React.createElement(
                     UI.ComboboxContent,
                     null,
                     ...contacts
-                      .filter((c: Record<string, unknown>) => {
-                        return true; // Combobox handles filtering internally
-                      })
+                      .filter(() => true)
                       .map((c: Record<string, unknown>) =>
                         React.createElement(
                           UI.ComboboxItem,
@@ -643,9 +785,9 @@ export function ListView() {
                               updatedAt: new Date().toISOString(),
                             },
                           });
-                          setForm((prev: FormData) => ({ ...prev, producerId: newId }));
+                          updateField('producerId', newId);
                           await fetchItems();
-                          toast.success('Productor creado', `Se creó "${name}"`);
+                          toast.success('Productor creado', `Se creo "${name}"`);
                         } catch {
                           toast.error('Error', 'No se pudo crear el productor');
                         }
@@ -662,27 +804,29 @@ export function ListView() {
                   UI.Combobox,
                   {
                     value: form.driverId,
-                    onValueChange: (v: string) =>
-                      setForm((prev: FormData) => ({ ...prev, driverId: v })),
+                    onValueChange: (v: string) => updateField('driverId', v),
                   },
                   React.createElement(UI.ComboboxChipTrigger, {
                     placeholder: 'Buscar conductor...',
                     renderChip: (val: string, onRemove: () => void) => {
                       const d = drivers.find((x: Record<string, unknown>) => String(x.id) === val);
-                      return React.createElement(UI.Chip, { size: 'sm', onRemove }, String(d?.name ?? val));
+                      return React.createElement(
+                        UI.Chip,
+                        { size: 'sm', onRemove },
+                        String(d?.name ?? val)
+                      );
                     },
                   }),
                   React.createElement(
                     UI.ComboboxContent,
                     null,
-                    ...drivers
-                      .map((d: Record<string, unknown>) =>
-                        React.createElement(
-                          UI.ComboboxItem,
-                          { key: String(d.id), value: String(d.id) },
-                          String(d.name ?? d.id)
-                        )
-                      ),
+                    ...drivers.map((d: Record<string, unknown>) =>
+                      React.createElement(
+                        UI.ComboboxItem,
+                        { key: String(d.id), value: String(d.id) },
+                        String(d.name ?? d.id)
+                      )
+                    ),
                     React.createElement(UI.ComboboxEmpty, null, 'Sin conductores encontrados'),
                     React.createElement(UI.ComboboxCreate, {
                       label: 'Crear conductor "{search}"',
@@ -699,9 +843,9 @@ export function ListView() {
                               updatedAt: new Date().toISOString(),
                             },
                           });
-                          setForm((prev: FormData) => ({ ...prev, driverId: newId }));
+                          updateField('driverId', newId);
                           await fetchItems();
-                          toast.success('Conductor creado', `Se creó "${name}"`);
+                          toast.success('Conductor creado', `Se creo "${name}"`);
                         } catch {
                           toast.error('Error', 'No se pudo crear el conductor');
                         }
@@ -713,12 +857,23 @@ export function ListView() {
               React.createElement(
                 'div',
                 { className: 'flex flex-col gap-1' },
-                React.createElement(UI.Label, null, 'Fecha de Recepción *'),
+                React.createElement(UI.Label, null, 'Empresa Transportista'),
+                React.createElement(UI.Input, {
+                  value: form.transportCompany,
+                  placeholder: 'Nombre de la empresa...',
+                  onChange: (e: { target: { value: string } }) =>
+                    updateField('transportCompany', e.target.value),
+                })
+              ),
+              React.createElement(
+                'div',
+                { className: 'flex flex-col gap-1' },
+                React.createElement(UI.Label, null, 'Fecha de Recepcion *'),
                 React.createElement(UI.Input, {
                   type: 'date',
                   value: form.receptionDate,
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => ({ ...prev, receptionDate: e.target.value })),
+                    updateField('receptionDate', e.target.value),
                 })
               ),
               React.createElement(
@@ -729,11 +884,18 @@ export function ListView() {
                   UI.Select,
                   {
                     value: form.grainType,
-                    onValueChange: (v: string) =>
-                      setForm((prev: FormData) => ({ ...prev, grainType: v })),
+                    onValueChange: (v: string) => updateField('grainType', v),
                   },
-                  React.createElement(UI.SelectItem, { key: 'mani_caja_runner', value: 'mani_caja_runner' }, 'Maní Caja Runner'),
-                  React.createElement(UI.SelectItem, { key: 'mani_blancheado', value: 'mani_blancheado' }, 'Maní Blancheado')
+                  React.createElement(
+                    UI.SelectItem,
+                    { key: 'mani_caja_runner', value: 'mani_caja_runner' },
+                    'Mani Caja Runner'
+                  ),
+                  React.createElement(
+                    UI.SelectItem,
+                    { key: 'mani_blancheado', value: 'mani_blancheado' },
+                    'Mani Blancheado'
+                  )
                 )
               ),
               React.createElement(
@@ -744,7 +906,7 @@ export function ListView() {
                   value: form.harvest,
                   placeholder: 'Cosecha...',
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => ({ ...prev, harvest: e.target.value })),
+                    updateField('harvest', e.target.value),
                 })
               ),
               React.createElement(
@@ -754,8 +916,9 @@ export function ListView() {
                 React.createElement(UI.Input, {
                   type: 'number',
                   value: form.pricePerTon,
+                  ...numericFocusProps,
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => ({ ...prev, pricePerTon: Number(e.target.value) })),
+                    updateField('pricePerTon', Number(e.target.value)),
                 })
               ),
               React.createElement(
@@ -766,18 +929,36 @@ export function ListView() {
                   UI.Select,
                   {
                     value: form.status,
-                    onValueChange: (v: string) =>
-                      setForm((prev: FormData) => ({ ...prev, status: v })),
+                    onValueChange: (v: string) => updateField('status', v),
                   },
-                  React.createElement(UI.SelectItem, { key: 'pending', value: 'pending' }, 'Pendiente'),
-                  React.createElement(UI.SelectItem, { key: 'processed', value: 'processed' }, 'Procesada'),
-                  React.createElement(UI.SelectItem, { key: 'certified', value: 'certified' }, 'Certificada')
+                  React.createElement(
+                    UI.SelectItem,
+                    { key: 'pending', value: 'pending' },
+                    'Pendiente'
+                  ),
+                  React.createElement(
+                    UI.SelectItem,
+                    { key: 'processed', value: 'processed' },
+                    'Procesada'
+                  ),
+                  React.createElement(
+                    UI.SelectItem,
+                    { key: 'certified', value: 'certified' },
+                    'Certificada'
+                  )
                 )
               )
             ),
 
-            // ── Sección 2: Detalle de kilos ──
-            React.createElement('h3', { className: 'text-sm font-semibold text-cg-text-muted uppercase tracking-wide border-b border-cg-border pb-2' }, 'Detalle de kilos'),
+            // ── Seccion 2: Detalle de kilos ──
+            React.createElement(
+              'h3',
+              {
+                className:
+                  'text-sm font-semibold text-cg-text-muted uppercase tracking-wide border-b border-cg-border pb-2',
+              },
+              'Detalle de kilos'
+            ),
             React.createElement(
               'div',
               { className: 'grid grid-cols-2 gap-4' },
@@ -788,14 +969,9 @@ export function ListView() {
                 React.createElement(UI.Input, {
                   type: 'number',
                   value: form.grossKg,
+                  ...numericFocusProps,
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => {
-                      const grossKg = Number(e.target.value);
-                      const netWithoutCleaningKg = grossKg - prev.taraKg;
-                      const netKg = netWithoutCleaningKg - prev.precleaningKg;
-                      const finalNetKg = netKg - prev.shrinkageKg;
-                      return { ...prev, grossKg, netWithoutCleaningKg, netKg, finalNetKg };
-                    }),
+                    updateField('grossKg', Number(e.target.value)),
                 })
               ),
               React.createElement(
@@ -805,14 +981,9 @@ export function ListView() {
                 React.createElement(UI.Input, {
                   type: 'number',
                   value: form.taraKg,
+                  ...numericFocusProps,
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => {
-                      const taraKg = Number(e.target.value);
-                      const netWithoutCleaningKg = prev.grossKg - taraKg;
-                      const netKg = netWithoutCleaningKg - prev.precleaningKg;
-                      const finalNetKg = netKg - prev.shrinkageKg;
-                      return { ...prev, taraKg, netWithoutCleaningKg, netKg, finalNetKg };
-                    }),
+                    updateField('taraKg', Number(e.target.value)),
                 })
               ),
               React.createElement(
@@ -829,18 +1000,26 @@ export function ListView() {
               React.createElement(
                 'div',
                 { className: 'flex flex-col gap-1' },
-                React.createElement(UI.Label, null, 'Pre-limpieza'),
+                React.createElement(
+                  'div',
+                  { className: 'flex items-center gap-1' },
+                  React.createElement(UI.Label, null, 'Pre-limpieza (kg)'),
+                  React.createElement(
+                    'span',
+                    {
+                      className: 'text-xs text-cg-text-muted',
+                      title:
+                        'Peso removido en pre-limpieza antes del analisis de muestra. Dejar en 0 si no aplica.',
+                    },
+                    '(?)'
+                  )
+                ),
                 React.createElement(UI.Input, {
                   type: 'number',
                   value: form.precleaningKg,
+                  ...numericFocusProps,
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => {
-                      const precleaningKg = Number(e.target.value);
-                      const netWithoutCleaningKg = prev.grossKg - prev.taraKg;
-                      const netKg = netWithoutCleaningKg - precleaningKg;
-                      const finalNetKg = netKg - prev.shrinkageKg;
-                      return { ...prev, precleaningKg, netWithoutCleaningKg, netKg, finalNetKg };
-                    }),
+                    updateField('precleaningKg', Number(e.target.value)),
                 })
               ),
               React.createElement(
@@ -857,18 +1036,36 @@ export function ListView() {
               React.createElement(
                 'div',
                 { className: 'flex flex-col gap-1' },
-                React.createElement(UI.Label, null, 'Merma Kg'),
+                React.createElement(UI.Label, null, '% Humedad'),
+                React.createElement(UI.Input, {
+                  type: 'number',
+                  step: '0.1',
+                  value: form.humidityPercent,
+                  ...numericFocusProps,
+                  onChange: (e: { target: { value: string } }) =>
+                    updateField('humidityPercent', Number(e.target.value)),
+                })
+              ),
+              React.createElement(
+                'div',
+                { className: 'flex flex-col gap-1' },
+                React.createElement(
+                  UI.Label,
+                  null,
+                  'Merma por humedad (kg)',
+                  form.humidityPercent > 9
+                    ? React.createElement(
+                        'span',
+                        { className: 'text-xs text-cg-text-muted ml-1' },
+                        `(${form.humidityPercent}% > 9%)`
+                      )
+                    : null
+                ),
                 React.createElement(UI.Input, {
                   type: 'number',
                   value: form.shrinkageKg,
-                  onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => {
-                      const shrinkageKg = Number(e.target.value);
-                      const netWithoutCleaningKg = prev.grossKg - prev.taraKg;
-                      const netKg = netWithoutCleaningKg - prev.precleaningKg;
-                      const finalNetKg = netKg - shrinkageKg;
-                      return { ...prev, shrinkageKg, netWithoutCleaningKg, netKg, finalNetKg };
-                    }),
+                  readOnly: true,
+                  className: 'bg-cg-bg-secondary',
                 })
               ),
               React.createElement(
@@ -879,91 +1076,151 @@ export function ListView() {
                   type: 'number',
                   value: form.finalNetKg,
                   readOnly: true,
-                  className: 'bg-cg-bg-secondary',
+                  className: 'bg-cg-bg-secondary font-semibold',
                 })
               )
             ),
 
-            // ── Sección 3: Calidades ──
-            React.createElement('h3', { className: 'text-sm font-semibold text-cg-text-muted uppercase tracking-wide border-b border-cg-border pb-2' }, 'Calidades'),
+            // ── Seccion 3: Analisis de muestra ──
+            React.createElement(
+              'h3',
+              {
+                className:
+                  'text-sm font-semibold text-cg-text-muted uppercase tracking-wide border-b border-cg-border pb-2',
+              },
+              'Analisis de muestra (gramos)'
+            ),
+            React.createElement(
+              'p',
+              { className: 'text-xs text-cg-text-muted -mt-2' },
+              'Ingresa los gramos de cada componente. Los porcentajes y totales se calculan automaticamente.'
+            ),
             React.createElement(
               'div',
-              { className: 'grid grid-cols-2 gap-4' },
+              { className: 'grid grid-cols-3 gap-4' },
+              // C.E.
               React.createElement(
                 'div',
                 { className: 'flex flex-col gap-1' },
-                React.createElement(UI.Label, null, '% Tierra'),
+                React.createElement(UI.Label, null, 'C.E. (Cuerpos Extr.) gr'),
                 React.createElement(UI.Input, {
                   type: 'number',
-                  value: form.dirtPercent,
+                  value: form.foreignMatterGr,
+                  ...numericFocusProps,
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => ({ ...prev, dirtPercent: Number(e.target.value) })),
-                })
+                    updateField('foreignMatterGr', Number(e.target.value)),
+                }),
+                React.createElement(
+                  'span',
+                  { className: 'text-xs text-cg-text-muted' },
+                  `${form.stickPercent}%`
+                )
               ),
+              // Tierra
               React.createElement(
                 'div',
                 { className: 'flex flex-col gap-1' },
-                React.createElement(UI.Label, null, '% Palo'),
+                React.createElement(UI.Label, null, 'Tierra (gr)'),
                 React.createElement(UI.Input, {
                   type: 'number',
-                  value: form.stickPercent,
+                  value: form.dirtGr,
+                  ...numericFocusProps,
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => ({ ...prev, stickPercent: Number(e.target.value) })),
-                })
+                    updateField('dirtGr', Number(e.target.value)),
+                }),
+                React.createElement(
+                  'span',
+                  { className: 'text-xs text-cg-text-muted' },
+                  `${form.dirtPercent}%`
+                )
               ),
+              // Cascara
               React.createElement(
                 'div',
                 { className: 'flex flex-col gap-1' },
-                React.createElement(UI.Label, null, '% Caja'),
+                React.createElement(UI.Label, null, 'Cascara (gr)'),
                 React.createElement(UI.Input, {
                   type: 'number',
-                  value: form.boxPercent,
+                  value: form.shellGr,
+                  ...numericFocusProps,
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => ({ ...prev, boxPercent: Number(e.target.value) })),
-                })
+                    updateField('shellGr', Number(e.target.value)),
+                }),
+                React.createElement(
+                  'span',
+                  { className: 'text-xs text-cg-text-muted' },
+                  `${form.boxPercent}%`
+                )
               ),
+              // G.D.
               React.createElement(
                 'div',
                 { className: 'flex flex-col gap-1' },
-                React.createElement(UI.Label, null, '% Apto'),
+                React.createElement(UI.Label, null, 'G.D. (Grano Danado) gr'),
                 React.createElement(UI.Input, {
                   type: 'number',
-                  value: form.aptPercent,
+                  value: form.damagedGrainGr,
+                  ...numericFocusProps,
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => ({ ...prev, aptPercent: Number(e.target.value) })),
-                })
+                    updateField('damagedGrainGr', Number(e.target.value)),
+                }),
+                React.createElement(
+                  'span',
+                  { className: 'text-xs text-cg-text-muted' },
+                  `${form.boxGrainPercent}%`
+                )
               ),
+              // G.S.
               React.createElement(
                 'div',
                 { className: 'flex flex-col gap-1' },
-                React.createElement(UI.Label, null, '% Suelto'),
+                React.createElement(UI.Label, null, 'G.S. (Grano Suelto) gr'),
                 React.createElement(UI.Input, {
                   type: 'number',
-                  value: form.loosePercent,
+                  value: form.looseGrainGr,
+                  ...numericFocusProps,
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => ({ ...prev, loosePercent: Number(e.target.value) })),
-                })
+                    updateField('looseGrainGr', Number(e.target.value)),
+                }),
+                React.createElement(
+                  'span',
+                  { className: 'text-xs text-cg-text-muted' },
+                  `${form.loosePercent}%`
+                )
               ),
+              // G.A.
               React.createElement(
                 'div',
                 { className: 'flex flex-col gap-1' },
-                React.createElement(UI.Label, null, '% Humedad'),
+                React.createElement(UI.Label, null, 'G.A. (Grano Apto) gr'),
                 React.createElement(UI.Input, {
                   type: 'number',
-                  value: form.humidityPercent,
+                  value: form.aptGrainGr,
+                  ...numericFocusProps,
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => ({ ...prev, humidityPercent: Number(e.target.value) })),
-                })
-              ),
+                    updateField('aptGrainGr', Number(e.target.value)),
+                }),
+                React.createElement(
+                  'span',
+                  { className: 'text-xs text-cg-text-muted' },
+                  `${form.aptPercent}%`
+                )
+              )
+            ),
+
+            // Totales de muestra (read-only)
+            React.createElement(
+              'div',
+              { className: 'grid grid-cols-3 gap-4' },
               React.createElement(
                 'div',
                 { className: 'flex flex-col gap-1' },
-                React.createElement(UI.Label, null, 'Caja/Grano %'),
+                React.createElement(UI.Label, null, 'Peso total muestra (gr)'),
                 React.createElement(UI.Input, {
                   type: 'number',
-                  value: form.boxGrainPercent,
-                  onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => ({ ...prev, boxGrainPercent: Number(e.target.value) })),
+                  value: form.sampleTotalGr,
+                  readOnly: true,
+                  className: 'bg-cg-bg-secondary',
                 })
               ),
               React.createElement(
@@ -973,9 +1230,56 @@ export function ListView() {
                 React.createElement(UI.Input, {
                   type: 'number',
                   value: form.zarandaSize,
+                  ...numericFocusProps,
                   onChange: (e: { target: { value: string } }) =>
-                    setForm((prev: FormData) => ({ ...prev, zarandaSize: Number(e.target.value) })),
+                    updateField('zarandaSize', Number(e.target.value)),
                 })
+              )
+            ),
+
+            // ── Seccion 4: Resultados ──
+            React.createElement(
+              'h3',
+              {
+                className:
+                  'text-sm font-semibold text-cg-text-muted uppercase tracking-wide border-b border-cg-border pb-2',
+              },
+              'Resultados'
+            ),
+            React.createElement(
+              'div',
+              { className: 'grid grid-cols-2 gap-4' },
+              React.createElement(
+                'div',
+                { className: 'flex flex-col gap-1' },
+                React.createElement(UI.Label, null, 'Kilos totales de industria'),
+                React.createElement(UI.Input, {
+                  type: 'number',
+                  value: form.industryKg,
+                  readOnly: true,
+                  className: 'bg-cg-bg-secondary font-semibold',
+                }),
+                React.createElement(
+                  'span',
+                  { className: 'text-xs text-cg-text-muted' },
+                  `(Neto Final x (%G.S. + %G.D.) / 100)`
+                )
+              ),
+              React.createElement(
+                'div',
+                { className: 'flex flex-col gap-1' },
+                React.createElement(UI.Label, null, 'Kilos totales de confiteria'),
+                React.createElement(UI.Input, {
+                  type: 'number',
+                  value: form.confectioneryKg,
+                  readOnly: true,
+                  className: 'bg-cg-bg-secondary font-semibold',
+                }),
+                React.createElement(
+                  'span',
+                  { className: 'text-xs text-cg-text-muted' },
+                  `(Neto Final x %G.A. / 100)`
+                )
               )
             ),
 
@@ -989,7 +1293,7 @@ export function ListView() {
                 rows: 2,
                 placeholder: 'Notas...',
                 onChange: (e: { target: { value: string } }) =>
-                  setForm((prev: FormData) => ({ ...prev, notes: e.target.value })),
+                  updateField('notes', e.target.value),
               })
             )
           ),
